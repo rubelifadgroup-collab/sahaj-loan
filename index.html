@@ -74,6 +74,8 @@
     .status-pending { background: #fef08a; color: #92400e; }
     .status-active { background: #dcfce7; color: #166534; }
     .status-failed { background: #fee2e2; color: #991b1b; }
+    .eligible { background: #dcfce7; border-color: #86efac; }
+    .not-eligible { background: #fee2e2; border-color: #fca5a5; }
   </style>
 </head>
 <body class="bg-slate-50">
@@ -177,9 +179,9 @@
       <div class="max-w-7xl mx-auto px-6">
         <div class="rounded-full bg-white shadow-sm border border-pink-200 px-4 py-3 ticker-wrap text-pink-700 font-semibold">
           <div class="ticker">
-            <span class="mr-10"><i class="fa-solid fa-bullhorn"></i> নোটিশ: লোনের জন্য ৫% সিকিউরিটি বিকাশে পাঠাতে হবে।</span>
-            <span class="mr-10"><i class="fa-solid fa-circle-check"></i> ট্রানজেকশন আইডি সাবমিট করার পর লোন অনুমোদিত হবে।</span>
-            <span class="mr-10"><i class="fa-solid fa-shield-heart"></i> শুধুমাত্র সঠিক ট্রানজেকশন আইডি গৃহণযোগ্য হবে।</span>
+            <span class="mr-10"><i class="fa-solid fa-bullhorn"></i> নোটিশ: আপনার যোগ্যতা অনুযায়ী লোন পাবেন।</span>
+            <span class="mr-10"><i class="fa-solid fa-circle-check"></i> উচ্চ আয় = বেশি লোন সুবিধা।</span>
+            <span class="mr-10"><i class="fa-solid fa-shield-heart"></i> ট্রানজেকশন আইডি যাচাই করে লোন অনুমোদন।</span>
           </div>
         </div>
       </div>
@@ -206,35 +208,92 @@
       </div>
     </section>
 
-    <section id="apply" class="py-16">
-      <div class="max-w-2xl mx-auto px-6">
+    <section id="apply" class="py-16 bg-slate-50">
+      <div class="max-w-3xl mx-auto px-6">
         <div class="rounded-3xl bg-white p-8 card-shadow">
-          <h2 class="text-3xl font-bold text-slate-900 text-center">লোন আবেদন</h2>
-          <form id="loanForm" class="mt-8 space-y-5">
-            <input type="text" id="name" placeholder="পুরো নাম" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
-
-            <select id="loanType" class="w-full rounded-2xl border border-slate-200 px-4 py-4 bg-white" required>
-              <option value="">লোনের ধরন নির্বাচন করুন</option>
-              <option>হোম লোন</option>
-              <option>কার লোন</option>
-              <option>পার্সোনাল লোন</option>
-              <option>মেডিকেল লোন</option>
-              <option>ব্যবসায়িক লোন</option>
-            </select>
-
-            <input type="tel" id="phone" placeholder="মোবাইল নম্বর" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
-            <input type="email" id="email" placeholder="ইমেইল" class="w-full rounded-2xl border border-slate-200 px-4 py-4">
-            <input type="number" id="amount" value="50000" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required oninput="updateSecurityPreview()">
-
-            <div class="rounded-2xl border border-pink-200 bg-pink-50 p-4">
-              <p class="text-sm text-pink-700 font-semibold">সিকিউরিটি জমা</p>
-              <p id="securityPreview" class="mt-1 text-2xl font-extrabold text-pink-600">৳ 2,500</p>
+          <h2 class="text-3xl font-bold text-slate-900 text-center">যোগ্যতা-ভিত্তিক লোন আবেদন</h2>
+          
+          <form id="loanForm" class="mt-8 space-y-6">
+            <!-- ব্যক্তিগত তথ্য -->
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 mb-4">📋 ব্যক্তিগত তথ্য</h3>
+              <div class="space-y-4">
+                <input type="text" id="name" placeholder="পুরো নাম" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
+                <input type="tel" id="phone" placeholder="মোবাইল নম্বর" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
+                <input type="email" id="email" placeholder="ইমেইল" class="w-full rounded-2xl border border-slate-200 px-4 py-4">
+              </div>
             </div>
 
-            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <!-- আয়ের তথ্য -->
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 mb-4">💰 আয়ের তথ্য</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 mb-2">আপনি কী?</label>
+                  <select id="userType" onchange="updateLoanEligibility()" class="w-full rounded-2xl border border-slate-200 px-4 py-4 bg-white" required>
+                    <option value="">নির্বাচন করুন</option>
+                    <option value="salaried">চাকরিজীবী</option>
+                    <option value="self-employed">ব্যবসায়ী/স্ব-নিয়োজিত</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 mb-2" id="incomeLabel">মাসিক বেতন/আয় (টাকায়)</label>
+                  <div class="flex gap-2">
+                    <input type="number" id="monthlyIncome" placeholder="50000" min="0" oninput="updateLoanEligibility()" class="flex-1 rounded-2xl border border-slate-200 px-4 py-4" required>
+                    <button type="button" onclick="showIncomeGuide()" class="rounded-2xl bg-blue-100 text-blue-600 px-4 py-2 font-semibold hover:bg-blue-200">ℹ️</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- যোগ্যতা তথ্য -->
+            <div id="eligibilityBox" class="hidden rounded-2xl border-2 border-slate-200 p-6 bg-slate-50">
+              <h3 class="text-lg font-bold text-slate-900 mb-4">✓ আপনার যোগ্যতা</h3>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div class="rounded-2xl border-2 p-4 bg-white">
+                  <p class="text-sm text-slate-600">সর্বোচ্চ লোন</p>
+                  <p id="maxLoanAmount" class="mt-1 text-3xl font-extrabold text-pink-600">৳ 0</p>
+                </div>
+                <div class="rounded-2xl border-2 p-4 bg-white">
+                  <p class="text-sm text-slate-600">সিকিউরিটি (৫%)</p>
+                  <p id="maxSecurityAmount" class="mt-1 text-3xl font-extrabold text-blue-600">৳ 0</p>
+                </div>
+              </div>
+              <div id="eligibilityMessage" class="mt-4 rounded-xl p-3 text-sm font-semibold"></div>
+            </div>
+
+            <!-- লোনের বিবরণ -->
+            <div id="loanDetailsBox" class="hidden">
+              <h3 class="text-lg font-bold text-slate-900 mb-4">📝 লোনের বিবরণ</h3>
+              <div class="space-y-4">
+                <select id="loanType" class="w-full rounded-2xl border border-slate-200 px-4 py-4 bg-white" required>
+                  <option value="">লোনের ধরন নির্বাচন করুন</option>
+                  <option>হোম লোন</option>
+                  <option>কার লোন</option>
+                  <option>পার্সোনাল লোন</option>
+                  <option>মেডিকেল লোন</option>
+                  <option>ব্যবসায়িক লোন</option>
+                  <option>শিক্ষা লোন</option>
+                </select>
+
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 mb-2">লোনের পরিমাণ (টাকায়)</label>
+                  <input type="number" id="loanAmount" placeholder="10000" min="0" oninput="updateSecurityPreview()" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
+                  <p id="loanAmountWarning" class="mt-2 text-sm text-red-600 hidden">⚠️ আপনার যোগ্যতার চেয়ে বেশি লোন চাইছেন!</p>
+                </div>
+
+                <div class="rounded-2xl border border-pink-200 bg-pink-50 p-4">
+                  <p class="text-sm text-pink-700 font-semibold">সিকিউরিটি জমা (৫%)</p>
+                  <p id="securityPreview" class="mt-1 text-2xl font-extrabold text-pink-600">৳ 0</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- পেমেন্ট তথ্য -->
+            <div id="paymentInfoBox" class="hidden rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               <div class="font-semibold">📱 বিকাশে পাঠান:</div>
               <div class="mt-1 font-bold text-lg">01906059520</div>
-              <div class="mt-2 text-xs">এই নম্বরে উপরের পরিমাণ টাকা বিকাশের মাধ্যমে পাঠান এবং নিচে ট্রানজেকশন আইডি দিয়ে সাবমিট করুন।</div>
+              <div class="mt-2 text-xs">উপরের পরিমাণ টাকা বিকাশের মাধ্যমে এই নম্বরে পাঠান এবং ট্রানজেকশন আইডি দিয়ে সাবমিট করুন।</div>
             </div>
 
             <button type="submit" class="w-full rounded-2xl pink-btn py-4 font-bold text-white">আবেদন জমা দিন</button>
@@ -243,7 +302,7 @@
       </div>
     </section>
 
-    <section id="myLoans" class="py-16 bg-slate-100">
+    <section id="myLoans" class="py-16">
       <div class="max-w-4xl mx-auto px-6">
         <div class="rounded-3xl bg-white p-6 card-shadow">
           <h3 class="text-2xl font-bold text-slate-900 mb-6">আমার লোন আবেদন</h3>
@@ -257,9 +316,9 @@
       </div>
     </section>
 
-    <section class="py-16 bg-white">
+    <section class="py-16 bg-slate-50">
       <div class="max-w-4xl mx-auto px-6">
-        <div class="rounded-3xl bg-slate-50 p-6 card-shadow">
+        <div class="rounded-3xl bg-white p-6 card-shadow">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-2xl font-bold text-slate-900">সাম্প্রতিক লোন</h3>
             <span class="text-sm text-slate-500">লাইভ আপডেট</span>
@@ -270,6 +329,37 @@
     </section>
   </div>
 
+  <!-- ইনকাম গাইড মডাল -->
+  <div id="incomeGuideModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-950/70 px-4">
+    <div class="w-full max-w-md rounded-[2rem] bg-white p-6 md:p-8 card-shadow max-h-96 overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-slate-900">লোন যোগ্যতা গাইড</h2>
+        <button onclick="document.getElementById('incomeGuideModal').classList.add('hidden')" class="text-2xl text-slate-400">×</button>
+      </div>
+
+      <div class="space-y-4 text-sm">
+        <div class="border-l-4 border-green-500 pl-4">
+          <p class="font-bold text-green-600">✓ বেতন ৫০,০০০+ টাকা</p>
+          <p class="text-slate-600">সর্বোচ্চ ১,০০,০০০ টাকা লোন</p>
+        </div>
+        <div class="border-l-4 border-blue-500 pl-4">
+          <p class="font-bold text-blue-600">✓ বেতন ২৫,০০০-৫০,০০০ টাকা</p>
+          <p class="text-slate-600">সর্বোচ্চ ৫০,০০০ টাকা লোন</p>
+        </div>
+        <div class="border-l-4 border-yellow-500 pl-4">
+          <p class="font-bold text-yellow-600">✓ বেতন ৫,০০০-২৫,০০০ টাকা</p>
+          <p class="text-slate-600">সর্বোচ্চ ১০,০০০ টাকা লোন</p>
+        </div>
+        <div class="border-l-4 border-red-500 pl-4">
+          <p class="font-bold text-red-600">✗ বেতন ৫,০০০ টাকার কম</p>
+          <p class="text-slate-600">লোনের জন্য যোগ্য নন</p>
+        </div>
+      </div>
+
+      <button onclick="document.getElementById('incomeGuideModal').classList.add('hidden')" class="w-full mt-6 rounded-2xl pink-btn py-3 font-bold text-white">বোঝা গেছে</button>
+    </div>
+  </div>
+
   <script>
     let loggedIn = false, balanceVisible = false, walletBalanceValue = 0, securityValue = 0, users = [], currentUser = null;
     const sampleNames = ['র***ান', 'স***ন', 'ম***ল', 'আ***ন', 'জ***ল', 'র***ী', 'ফ***া', 'ই***া'];
@@ -277,9 +367,49 @@
     let recentLoanIndex = 0;
     let recentLoanInterval;
     let userLoans = {};
-    let usedTransactionIds = {}; // ব্যবহৃত ট্রানজেকশন আইডি ট্র্যাক করবে
+    let usedTransactionIds = {};
 
-    // লোকাল স্টোরেজ থেকে ডেটা লোড করুন
+    // যোগ্যতা নির্ধারণ ফাংশন
+    function calculateLoanEligibility(income) {
+      if (income >= 50000) return { maxLoan: 100000, message: '✓ যোগ্য: সর্বোচ্চ ১,০০,০০০ টাকা লোন' };
+      if (income >= 25000) return { maxLoan: 50000, message: '✓ যোগ্য: সর্বোচ্চ ৫০,০০০ টাকা লোন' };
+      if (income >= 5000) return { maxLoan: 10000, message: '✓ যোগ্য: সর্বোচ্চ ১০,০০০ টাকা লোন' };
+      return { maxLoan: 0, message: '✗ যোগ্য নন: বেতন ৫,০০০ টাকার কম' };
+    }
+
+    function updateLoanEligibility() {
+      const userType = document.getElementById('userType').value;
+      const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+
+      if (!userType || monthlyIncome <= 0) {
+        document.getElementById('eligibilityBox').classList.add('hidden');
+        document.getElementById('loanDetailsBox').classList.add('hidden');
+        document.getElementById('paymentInfoBox').classList.add('hidden');
+        return;
+      }
+
+      const eligibility = calculateLoanEligibility(monthlyIncome);
+      const isEligible = eligibility.maxLoan > 0;
+
+      if (isEligible) {
+        document.getElementById('maxLoanAmount').textContent = '৳ ' + eligibility.maxLoan.toLocaleString('bn-BD');
+        document.getElementById('maxSecurityAmount').textContent = '৳ ' + Math.round(eligibility.maxLoan * 0.05).toLocaleString('bn-BD');
+        document.getElementById('eligibilityMessage').innerHTML = `<div class="eligible border border-green-400 rounded-lg p-2">${eligibility.message}</div>`;
+        document.getElementById('loanDetailsBox').classList.remove('hidden');
+        document.getElementById('paymentInfoBox').classList.remove('hidden');
+      } else {
+        document.getElementById('eligibilityMessage').innerHTML = `<div class="not-eligible border border-red-400 rounded-lg p-2">${eligibility.message}</div>`;
+        document.getElementById('loanDetailsBox').classList.add('hidden');
+        document.getElementById('paymentInfoBox').classList.add('hidden');
+      }
+
+      document.getElementById('eligibilityBox').classList.remove('hidden');
+    }
+
+    function showIncomeGuide() {
+      document.getElementById('incomeGuideModal').classList.remove('hidden');
+    }
+
     function loadData() {
       const savedUsers = localStorage.getItem('users');
       const savedLoans = localStorage.getItem('userLoans');
@@ -289,7 +419,6 @@
       if (savedTransactionIds) usedTransactionIds = JSON.parse(savedTransactionIds);
     }
 
-    // লোকাল স্টোরেজে ডেটা সেভ করুন
     function saveData() {
       localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('userLoans', JSON.stringify(userLoans));
@@ -314,7 +443,7 @@
       
       users.push({ name, phone, pass });
       saveData();
-      alert('রেজিস্ট্রেশন সফল হয়েছে। এখন লগ ইন করুন।');
+      alert('রেজিস্ট্রেশন সফল হয়েছে�� এখন লগ ইন করুন।');
       switchTab('login');
       document.getElementById('loginPhone').value = phone;
       document.getElementById('loginPassword').value = pass;
@@ -388,7 +517,15 @@
     }
 
     function updateSecurityPreview() {
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
+      const amount = parseFloat(document.getElementById('loanAmount').value) || 0;
+      const maxLoan = parseFloat(document.getElementById('maxLoanAmount').textContent.replace(/[^0-9]/g, '')) || 0;
+      
+      if (amount > maxLoan && maxLoan > 0) {
+        document.getElementById('loanAmountWarning').classList.remove('hidden');
+      } else {
+        document.getElementById('loanAmountWarning').classList.add('hidden');
+      }
+      
       document.getElementById('securityPreview').textContent = '৳ ' + Math.round(amount * 0.05).toLocaleString('bn-BD');
     }
 
@@ -499,12 +636,10 @@
       
       if (!txnId) return alert('ট্রানজেকশন আইডি দিন');
       
-      // ট্রানজেকশন আইডি সঠিক কিনা চেক করুন (সাধারণত ৬-১০ ডিজিট)
       if (!/^[A-Z0-9]{6,20}$/.test(txnId)) {
         return alert('সঠিক ট্রানজেকশন আইডি দিন (অক্ষর এবং সংখ্যার মিশ্রণ)');
       }
 
-      // চেক করুন এই ট্রানজেকশন আইডি আগে ব্যবহৃত হয়েছে কিনা
       if (usedTransactionIds[txnId]) {
         userLoans[currentUser][idx].status = 'failed';
         saveData();
@@ -512,7 +647,6 @@
         return alert('❌ এই ট্রানজেকশন আইডি ইতিমধ্যে ব্যবহৃত হয়েছে। নতুন আইডি দিয়ে চেষ্টা করুন।');
       }
 
-      // ট্রানজেকশন আইডি লোন অনুমোদন করুন
       userLoans[currentUser][idx].status = 'active';
       userLoans[currentUser][idx].transactionId = txnId;
       usedTransactionIds[txnId] = true;
@@ -533,23 +667,32 @@
     document.getElementById('loanForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const name = document.getElementById('name').value.trim();
+      const userType = document.getElementById('userType').value;
+      const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value) || 0;
       const loanType = document.getElementById('loanType').value;
       const phone = document.getElementById('phone').value.trim();
       const email = document.getElementById('email').value.trim();
-      const amount = parseFloat(document.getElementById('amount').value) || 0;
-      const security = amount * 0.05;
+      const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+      const security = loanAmount * 0.05;
 
-      if (!name || !loanType || !phone || amount <= 0) {
+      if (!name || !userType || monthlyIncome <= 0 || !loanType || !phone || loanAmount <= 0) {
         return alert('সব তথ্য সঠিকভাবে পূরণ করুন');
+      }
+
+      const eligibility = calculateLoanEligibility(monthlyIncome);
+      if (loanAmount > eligibility.maxLoan) {
+        return alert('❌ আপনার যোগ্যতার চেয়ে বেশি লোন চাইছেন। সর্বোচ্চ ৳ ' + eligibility.maxLoan.toLocaleString('bn-BD'));
       }
 
       const newLoan = {
         id: Math.floor(100000 + Math.random() * 900000),
         name: name,
+        userType: userType,
+        monthlyIncome: monthlyIncome,
         loanType: loanType,
         phone: phone,
         email: email,
-        amount: amount,
+        amount: loanAmount,
         security: Math.round(security),
         status: 'pending',
         date: new Date().toLocaleDateString('bn-BD')
@@ -563,9 +706,12 @@
       saveData();
 
       document.getElementById('loanForm').reset();
+      document.getElementById('eligibilityBox').classList.add('hidden');
+      document.getElementById('loanDetailsBox').classList.add('hidden');
+      document.getElementById('paymentInfoBox').classList.add('hidden');
       updateSecurityPreview();
 
-      alert(`✓ আবেদন জমা হয়েছে!\n\nআবেদন ID: #${newLoan.id}\nসিকিউরিটি পরিমাণ: ৳ ${newLoan.security.toLocaleString('bn-BD')}\n\n📱 বিকাশে এই পরিমাণ পাঠান: 01906059520\nট্রানজেকশন আইডি দিয়ে সাবমিট করুন।`);
+      alert(`✓ আবেদন জমা হয়েছে!\n\nআবেদন ID: #${newLoan.id}\nসর্বোচ্চ লোন যোগ্যতা: ৳ ${eligibility.maxLoan.toLocaleString('bn-BD')}\nআবেদনকৃত লোন: ৳ ${newLoan.amount.toLocaleString('bn-BD')}\nসিকিউরিটি: ৳ ${newLoan.security.toLocaleString('bn-BD')}\n\n📱 বিকাশে এই পরিমাণ পাঠান: 01906059520\nট্রানজেকশন আইডি দিয়ে সাবমিট করুন।`);
       
       displayMyLoans();
       document.getElementById('myLoans').scrollIntoView({behavior:'smooth'});
@@ -573,7 +719,6 @@
 
     window.onload = function() {
       loadData();
-      updateSecurityPreview();
       document.getElementById('walletBalance').textContent = '৳ ••••••';
       document.getElementById('securityBalance').textContent = '৳ ••••••';
       document.getElementById('walletStatus').textContent = 'Locked';
