@@ -73,6 +73,7 @@
     }
     .status-pending { background: #fef08a; color: #92400e; }
     .status-active { background: #dcfce7; color: #166534; }
+    .status-failed { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body class="bg-slate-50">
@@ -176,9 +177,9 @@
       <div class="max-w-7xl mx-auto px-6">
         <div class="rounded-full bg-white shadow-sm border border-pink-200 px-4 py-3 ticker-wrap text-pink-700 font-semibold">
           <div class="ticker">
-            <span class="mr-10"><i class="fa-solid fa-bullhorn"></i> নোটিশ: লোনের জন্য ৫% সিকিউরিটি জমা দিতে হবে।</span>
-            <span class="mr-10"><i class="fa-solid fa-circle-check"></i> সিকিউরিটি আপনার ওয়ালেটে থাকবে, ঋণ সম্পন্ন হলে টাকা উইথড্রো করতে পারবেন।</span>
-            <span class="mr-10"><i class="fa-solid fa-shield-heart"></i> সিকিউরিটি জমা দেওয়ার ৫ থেকে ১০ মিনিটের ভিতর লোন আসবে।</span>
+            <span class="mr-10"><i class="fa-solid fa-bullhorn"></i> নোটিশ: লোনের জন্য ৫% সিকিউরিটি বিকাশে পাঠাতে হবে।</span>
+            <span class="mr-10"><i class="fa-solid fa-circle-check"></i> ট্রানজেকশন আইডি সাবমিট করার পর লোন অনুমোদিত হবে।</span>
+            <span class="mr-10"><i class="fa-solid fa-shield-heart"></i> শুধুমাত্র সঠিক ট্রানজেকশন আইডি গৃহণযোগ্য হবে।</span>
           </div>
         </div>
       </div>
@@ -231,30 +232,18 @@
             </div>
 
             <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <div class="font-semibold">সেন্ড মানি করতে হবে: 01906059520</div>
-              <div class="mt-1">সিকিউরিটি আপনার ওয়ালেটে থাকবে, ঋণ সম্পন্ন হলে টাকা উইথড্রো করতে পারবেন।</div>
-              <div class="mt-1">সিকিউরিটি জমা দেওয়ার ৫ থেকে ১০ মিনিটের ভিতর লোন আসবে।</div>
+              <div class="font-semibold">📱 বিকাশে পাঠান:</div>
+              <div class="mt-1 font-bold text-lg">01906059520</div>
+              <div class="mt-2 text-xs">এই নম্বরে উপরের পরিমাণ টাকা বিকাশের মাধ্যমে পাঠান এবং নিচে ট্রানজেকশন আইডি দিয়ে সাবমিট করুন।</div>
             </div>
 
-            <button class="w-full rounded-2xl pink-btn py-4 font-bold text-white">আবেদন জমা দিন</button>
+            <button type="submit" class="w-full rounded-2xl pink-btn py-4 font-bold text-white">আবেদন জমা দিন</button>
           </form>
         </div>
       </div>
     </section>
 
-    <section class="py-16 bg-slate-100">
-      <div class="max-w-4xl mx-auto px-6">
-        <div class="rounded-3xl bg-white p-6 card-shadow">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-2xl font-bold text-slate-900">সাম্প্রতিক লোন</h3>
-            <span class="text-sm text-slate-500">লাইভ আপডেট</span>
-          </div>
-          <div id="recentLoans" class="grid gap-3 md:grid-cols-2 xl:grid-cols-5"></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="myLoans" class="py-16">
+    <section id="myLoans" class="py-16 bg-slate-100">
       <div class="max-w-4xl mx-auto px-6">
         <div class="rounded-3xl bg-white p-6 card-shadow">
           <h3 class="text-2xl font-bold text-slate-900 mb-6">আমার লোন আবেদন</h3>
@@ -267,6 +256,18 @@
         </div>
       </div>
     </section>
+
+    <section class="py-16 bg-white">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="rounded-3xl bg-slate-50 p-6 card-shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-2xl font-bold text-slate-900">সাম্প্রতিক লোন</h3>
+            <span class="text-sm text-slate-500">লাইভ আপডেট</span>
+          </div>
+          <div id="recentLoans" class="grid gap-3 md:grid-cols-2 xl:grid-cols-5"></div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -275,20 +276,24 @@
     const sampleAmounts = [15000, 25000, 30000, 45000, 60000, 80000, 120000];
     let recentLoanIndex = 0;
     let recentLoanInterval;
-    let userLoans = {}; // স্টোর করবে প্রতিটি ইউজারের লোন আবেদন
+    let userLoans = {};
+    let usedTransactionIds = {}; // ব্যবহৃত ট্রানজেকশন আইডি ট্র্যাক করবে
 
     // লোকাল স্টোরেজ থেকে ডেটা লোড করুন
     function loadData() {
       const savedUsers = localStorage.getItem('users');
       const savedLoans = localStorage.getItem('userLoans');
+      const savedTransactionIds = localStorage.getItem('usedTransactionIds');
       if (savedUsers) users = JSON.parse(savedUsers);
       if (savedLoans) userLoans = JSON.parse(savedLoans);
+      if (savedTransactionIds) usedTransactionIds = JSON.parse(savedTransactionIds);
     }
 
     // লোকাল স্টোরেজে ডেটা সেভ করুন
     function saveData() {
       localStorage.setItem('users', JSON.stringify(users));
       localStorage.setItem('userLoans', JSON.stringify(userLoans));
+      localStorage.setItem('usedTransactionIds', JSON.stringify(usedTransactionIds));
     }
 
     function switchTab(tab) {
@@ -395,7 +400,7 @@
         const amount = sampleAmounts[Math.floor(Math.random() * sampleAmounts.length)];
         const minsAgo = Math.floor(Math.random() * 25) + 1;
         items += `
-          <div class="live-item rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+          <div class="live-item rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <div class="font-semibold text-slate-900">${name}</div>
@@ -430,8 +435,9 @@
       const loans = userLoans[currentUser];
       let html = '';
       loans.forEach((loan, idx) => {
-        const statusClass = loan.status === 'pending' ? 'status-pending' : 'status-active';
-        const statusText = loan.status === 'pending' ? '⏳ পেন্ডিং' : '✓ অনুমোদিত';
+        const statusClass = loan.status === 'pending' ? 'status-pending' : loan.status === 'active' ? 'status-active' : 'status-failed';
+        const statusText = loan.status === 'pending' ? '⏳ পেন্ডিং' : loan.status === 'active' ? '✓ অনুমোদিত' : '✗ ব্যর্থ';
+        
         html += `
           <div class="border border-slate-200 rounded-2xl p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between mb-3">
@@ -455,14 +461,31 @@
                 <p class="font-bold text-slate-900">${loan.date}</p>
               </div>
             </div>
+            
             ${loan.status === 'pending' ? `
-              <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-sm text-yellow-900 mb-3">
-                <strong>সিকিউরিটি জমা দিন:</strong> 01906059520 এ সেন্ড মানি করে সিকিউরিটি জমা দিন। জমা দেওয়ার ৫-১০ মিনিটের মধ্যে লোন অনুমোদিত হবে।
+              <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 mb-4">
+                <strong>📱 পরবর্তী ধাপ:</strong>
+                <div class="mt-2">
+                  1. বিকাশে <strong>৳ ${loan.security.toLocaleString('bn-BD')}</strong> এই নম্বরে পাঠান: <strong>01906059520</strong>
+                </div>
+                <div class="mt-1">
+                  2. ট্রানজেকশন আইডি নিচে দিয়ে সাবমিট করুন
+                </div>
               </div>
-              <button onclick="completeLoan(${idx})" class="w-full pink-btn py-2 rounded-xl font-semibold text-white text-sm">পেমেন্ট সম্পন্ন</button>
+              <div class="space-y-3">
+                <input type="text" id="txnId_${idx}" placeholder="ট্রানজেকশন আইডি দিন" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm" maxlength="20">
+                <button onclick="verifyTransaction(${idx})" class="w-full pink-btn py-2 rounded-xl font-semibold text-white text-sm">ট্রানজেকশন সাবমিট করুন</button>
+              </div>
+            ` : loan.status === 'active' ? `
+              <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-900">
+                <strong>✓ অনুমোদিত!</strong> লোন অ্যাপ্রুভ হয়েছে। ট্রানজেকশন আইডি: <strong>${loan.transactionId}</strong>
+                <div class="mt-2">আপনার ওয়ালেটে ৳ ${loan.amount.toLocaleString('bn-BD')} যোগ করা হয়েছে।</div>
+              </div>
             ` : `
-              <div class="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-900">
-                <strong>অনুমোদিত!</strong> লোন অ্যাপ্রুভ হয়েছে এবং আপনার ওয়ালেটে ৳ ${loan.amount.toLocaleString('bn-BD')} জমা দেওয়া হয়েছে।
+              <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-900">
+                <strong>✗ ব্যর্থ!</strong> ট্রানজেকশন আইডি গ্রহণযোগ্য নয় বা ইতিমধ্যে ব্যবহৃত হয়েছে।
+                <div class="mt-2">অনুগ্রহ করে নতুন ট্রানজেকশন আইডি দিয়ে আবার চেষ্টা করুন।</div>
+                <button onclick="resetLoan(${idx})" class="mt-3 w-full px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600">আবার চেষ্টা করুন</button>
               </div>
             `}
           </div>
@@ -471,17 +494,40 @@
       document.getElementById('myLoansContainer').innerHTML = html;
     }
 
-    function completeLoan(idx) {
-      if (!currentUser || !userLoans[currentUser]) return;
-      const loans = userLoans[currentUser];
-      if (loans[idx]) {
-        loans[idx].status = 'active';
-        walletBalanceValue = loans[idx].amount;
-        securityValue = loans[idx].security;
+    function verifyTransaction(idx) {
+      const txnId = document.getElementById(`txnId_${idx}`).value.trim();
+      
+      if (!txnId) return alert('ট্রানজেকশন আইডি দিন');
+      
+      // ট্রানজেকশন আইডি সঠিক কিনা চেক করুন (সাধারণত ৬-১০ ডিজিট)
+      if (!/^[A-Z0-9]{6,20}$/.test(txnId)) {
+        return alert('সঠিক ট্রানজেকশন আইডি দিন (অক্ষর এবং সংখ্যার মিশ্রণ)');
+      }
+
+      // চেক করুন এই ট্রানজেকশন আইডি আগে ব্যবহৃত হয়েছে কিনা
+      if (usedTransactionIds[txnId]) {
+        userLoans[currentUser][idx].status = 'failed';
         saveData();
         displayMyLoans();
-        alert('পেমেন্ট সফল! লোন অনুমোদিত হয়েছে। ৳ ' + loans[idx].amount.toLocaleString('bn-BD') + ' আপনার ওয়ালেটে যোগ করা হয়েছে।');
+        return alert('❌ এই ট্রানজেকশন আইডি ইতিমধ্যে ব্যবহৃত হয়েছে। নতুন আইডি দিয়ে চেষ্টা করুন।');
       }
+
+      // ট্রানজেকশন আইডি লোন অনুমোদন করুন
+      userLoans[currentUser][idx].status = 'active';
+      userLoans[currentUser][idx].transactionId = txnId;
+      usedTransactionIds[txnId] = true;
+      walletBalanceValue = userLoans[currentUser][idx].amount;
+      securityValue = userLoans[currentUser][idx].security;
+      saveData();
+      displayMyLoans();
+      alert('✓ সফল! ট্রানজেকশন যাচাই হয়েছে। ৳ ' + userLoans[currentUser][idx].amount.toLocaleString('bn-BD') + ' আপনার ওয়ালেটে যোগ করা হয়েছে।');
+    }
+
+    function resetLoan(idx) {
+      userLoans[currentUser][idx].status = 'pending';
+      delete userLoans[currentUser][idx].transactionId;
+      saveData();
+      displayMyLoans();
     }
 
     document.getElementById('loanForm').addEventListener('submit', function(e) {
@@ -497,7 +543,6 @@
         return alert('সব তথ্য সঠিকভাবে পূরণ করুন');
       }
 
-      // নতুন লোন অবজেক্ট তৈরি করুন
       const newLoan = {
         id: Math.floor(100000 + Math.random() * 900000),
         name: name,
@@ -510,22 +555,18 @@
         date: new Date().toLocaleDateString('bn-BD')
       };
 
-      // ইউজারের লোন অ্যারে তৈরি করুন যদি না থাকে
       if (!userLoans[currentUser]) {
         userLoans[currentUser] = [];
       }
 
-      // নতুন লোন যোগ করুন
       userLoans[currentUser].push(newLoan);
       saveData();
 
-      // ফর্ম রিসেট করুন
       document.getElementById('loanForm').reset();
       updateSecurityPreview();
 
-      alert(`আপনার আবেদন জমা হয়েছে!\nআবেদন ID: #${newLoan.id}\nসিকিউরিটি: ৳ ${newLoan.security.toLocaleString('bn-BD')}\n\nসিকিউরিটি জমা দিন এবং পেমেন্ট সম্পন্ন করুন।`);
+      alert(`✓ আবেদন জমা হয়েছে!\n\nআবেদন ID: #${newLoan.id}\nসিকিউরিটি পরিমাণ: ৳ ${newLoan.security.toLocaleString('bn-BD')}\n\n📱 বিকাশে এই পরিমাণ পাঠান: 01906059520\nট্রানজেকশন আইডি দিয়ে সাবমিট করুন।`);
       
-      // আমার লোন সেকশনে যান
       displayMyLoans();
       document.getElementById('myLoans').scrollIntoView({behavior:'smooth'});
     });
