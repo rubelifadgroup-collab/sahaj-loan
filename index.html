@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>সহজলোন | প্রিমিয়াম ওয়ালেট</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Noto Sans Bengali', Arial, sans-serif; }
+    .hero-bg {
+      background:
+        radial-gradient(circle at top left, rgba(236,72,153,.28), transparent 30%),
+        radial-gradient(circle at top right, rgba(59,130,246,.22), transparent 28%),
+        linear-gradient(rgba(10,15,30,.86), rgba(10,15,30,.86)),
+        url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200');
+      background-size: cover;
+      background-position: center;
+    }
+    .card-shadow { box-shadow: 0 24px 70px rgba(15,23,42,.14); }
+    .balance-hidden { filter: blur(10px); letter-spacing: 8px; }
+    .premium-card {
+      background: linear-gradient(135deg, #ff2d7a 0%, #db2777 45%, #fb7185 100%);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .premium-card::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 45%);
+      animation: floatGlow 6s linear infinite;
+    }
+    @keyframes floatGlow {
+      0% { transform: translate3d(-10%, -10%, 0) rotate(0deg); }
+      50% { transform: translate3d(10%, 10%, 0) rotate(180deg); }
+      100% { transform: translate3d(-10%, -10%, 0) rotate(360deg); }
+    }
+    .pulse-ring { animation: pulseRing 1.8s ease-out infinite; }
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: .9; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    .pink-btn { background: linear-gradient(135deg, #ff2d7a, #fb7185); }
+    .fade-in { animation: fadeIn .8s ease both; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ticker-wrap { overflow: hidden; white-space: nowrap; }
+    .ticker {
+      display: inline-block;
+      padding-left: 100%;
+      animation: tickerMove 22s linear infinite;
+    }
+    @keyframes tickerMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .live-item { animation: livePop .35s ease; }
+    @keyframes livePop {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-slate-50">
+
+  <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4">
+    <div class="w-full max-w-md rounded-[2rem] bg-white p-6 md:p-8 card-shadow">
+      <div class="text-center mb-8">
+        <div class="mx-auto mb-4 h-16 w-16 rounded-3xl pink-btn flex items-center justify-center text-white text-2xl shadow-xl">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-900">অ্যাকাউন্ট</h1>
+        <p class="text-slate-500 mt-2">লগ ইন বা নতুন রেজিস্ট্রেশন করুন</p>
+      </div>
+
+      <div class="flex rounded-2xl bg-slate-100 p-1 mb-6">
+        <button type="button" onclick="switchTab('login')" id="loginTab" class="w-1/2 rounded-2xl bg-white py-3 font-bold text-slate-900 shadow-sm">লগ ইন</button>
+        <button type="button" onclick="switchTab('register')" id="registerTab" class="w-1/2 rounded-2xl py-3 font-bold text-slate-500">রেজিস্ট্রেশন</button>
+      </div>
+
+      <div id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">মোবাইল নম্বর</label>
+          <input id="loginPhone" type="tel" value="01906059520" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">পাসওয়ার্ড</label>
+          <input id="loginPassword" type="password" value="123456" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100">
+        </div>
+        <button onclick="login()" class="w-full rounded-2xl pink-btn py-4 font-bold text-white shadow-lg shadow-pink-500/20">লগ ইন</button>
+      </div>
+
+      <div id="registerForm" class="space-y-4 hidden">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">নাম</label>
+          <input id="regName" type="text" placeholder="আপনার নাম" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">মোবাইল নম্বর</label>
+          <input id="regPhone" type="tel" placeholder="01XXXXXXXXX" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 mb-2">পাসওয়ার্ড</label>
+          <input id="regPassword" type="password" placeholder="নতুন পাসওয়ার্ড" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100">
+        </div>
+        <button onclick="register()" class="w-full rounded-2xl pink-btn py-4 font-bold text-white shadow-lg shadow-pink-500/20">রেজিস্ট্রেশন</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <nav class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-extrabold text-pink-600">সহজলোন</div>
+        <button onclick="logout()" class="rounded-xl border border-slate-200 px-4 py-2 font-semibold text-slate-700 hover:bg-slate-50">লগ আউট</button>
+      </div>
+    </nav>
+
+    <section class="hero-bg text-white py-16">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="grid lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <p class="inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">Premium Balance Wallet</p>
+            <p class="mt-5 text-lg text-slate-200">লোন আবেদন, EMI ক্যালকুলেটর এবং ব্যালেন্স—সব এক জায়গায়, সুন্দর প্রিমিয়াম লুকে।</p>
+            <div class="mt-8 flex flex-wrap gap-4">
+              <button onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})" class="rounded-2xl pink-btn px-6 py-4 font-bold text-white">লোন আবেদন</button>
+              <button onclick="document.getElementById('calculator').scrollIntoView({behavior:'smooth'})" class="rounded-2xl bg-blue-500 px-6 py-4 font-bold text-white hover:bg-blue-600">EMI ক্যালকুলেটর</button>
+            </div>
+          </div>
+
+          <div class="premium-card rounded-[2rem] p-6 card-shadow text-white" onclick="toggleBalance()">
+            <div class="relative z-10">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-pink-100 text-sm animate-pulse">Available Balance</p>
+                  <h3 id="walletBalance" class="mt-2 text-4xl font-extrabold balance-hidden">৳ 0</h3>
+                </div>
+                <div class="relative h-14 w-14">
+                  <span class="pulse-ring absolute inset-0 rounded-2xl bg-white/20"></span>
+                  <div class="relative h-14 w-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center">
+                    <i class="fa-solid fa-eye text-xl"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-6 grid grid-cols-2 gap-4">
+                <div class="rounded-2xl bg-white/10 p-4">
+                  <p class="text-sm text-pink-100">Security</p>
+                  <p id="securityBalance" class="mt-1 text-2xl font-bold balance-hidden">৳ 0</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-4">
+                  <p class="text-sm text-pink-100">Status</p>
+                  <p id="walletStatus" class="mt-1 text-2xl font-bold">Locked</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-6 bg-gradient-to-r from-pink-50 to-rose-100 border-y border-pink-200">
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="rounded-full bg-white shadow-sm border border-pink-200 px-4 py-3 ticker-wrap text-pink-700 font-semibold">
+          <div class="ticker">
+            <span class="mr-10"><i class="fa-solid fa-bullhorn"></i> নোটিশ: লোনের জন্য ৫% সিকিউরিটি জমা দিতে হবে।</span>
+            <span class="mr-10"><i class="fa-solid fa-circle-check"></i> সিকিউরিটি আপনার ওয়ালেটে থাকবে, ঋণ সম্পন্ন হলে টাকা উইথড্রো করতে পারবেন।</span>
+            <span class="mr-10"><i class="fa-solid fa-shield-heart"></i> সিকিউরিটি জমা দেওয়ার ৫ থেকে ১০ মিনিটের ভিতর লোন আসবে।</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="calculator" class="py-16">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="rounded-3xl bg-white p-8 card-shadow">
+          <h2 class="text-3xl font-bold text-slate-900 text-center">EMI ক্যালকুলেটর</h2>
+          <div class="mt-8 grid md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+              <input id="emiAmount" type="number" value="50000" class="w-full rounded-2xl border border-slate-200 px-4 py-4" placeholder="লোনের পরিমাণ">
+              <input id="emiRate" type="number" value="12" step="0.1" class="w-full rounded-2xl border border-slate-200 px-4 py-4" placeholder="সুদের হার">
+              <input id="emiMonths" type="number" value="12" class="w-full rounded-2xl border border-slate-200 px-4 py-4" placeholder="মেয়াদ (মাস)">
+              <button onclick="calculateEMI()" class="w-full rounded-2xl bg-blue-600 py-4 font-bold text-white hover:bg-blue-700">EMI হিসাব করুন</button>
+            </div>
+            <div class="rounded-3xl bg-blue-50 p-8 flex flex-col justify-center">
+              <p class="text-slate-500">মাসিক কিস্তি</p>
+              <p id="emiResult" class="mt-2 text-5xl font-extrabold text-blue-700">৳ 0</p>
+              <p class="mt-4 text-sm text-slate-500">মোট পরিশোধ: <span id="emiTotal" class="font-semibold">৳ 0</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="apply" class="py-16">
+      <div class="max-w-2xl mx-auto px-6">
+        <div class="rounded-3xl bg-white p-8 card-shadow">
+          <h2 class="text-3xl font-bold text-slate-900 text-center">লোন আবেদন</h2>
+          <form id="loanForm" class="mt-8 space-y-5">
+            <input type="text" id="name" placeholder="পুরো নাম" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
+
+            <select id="loanType" class="w-full rounded-2xl border border-slate-200 px-4 py-4 bg-white" required>
+              <option value="">লোনের ধরন নির্বাচন করুন</option>
+              <option>হোম লোন</option>
+              <option>কার লোন</option>
+              <option>পার্সোনাল লোন</option>
+              <option>মেডিকেল লোন</option>
+              <option>ব্যবসায়িক লোন</option>
+            </select>
+
+            <input type="tel" id="phone" placeholder="মোবাইল নম্বর" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required>
+            <input type="email" id="email" placeholder="ইমেইল" class="w-full rounded-2xl border border-slate-200 px-4 py-4">
+            <input type="number" id="amount" value="50000" class="w-full rounded-2xl border border-slate-200 px-4 py-4" required oninput="updateSecurityPreview()">
+
+            <div class="rounded-2xl border border-pink-200 bg-pink-50 p-4">
+              <p class="text-sm text-pink-700 font-semibold">সিকিউরিটি জমা</p>
+              <p id="securityPreview" class="mt-1 text-2xl font-extrabold text-pink-600">৳ 2,500</p>
+            </div>
+
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div class="font-semibold">সেন্ড মানি করতে হবে: 01906059520</div>
+              <div class="mt-1">সিকিউরিটি আপনার ওয়ালেটে থাকবে, ঋণ সম্পন্ন হলে টাকা উইথড্রো করতে পারবেন।</div>
+              <div class="mt-1">সিকিউরিটি জমা দেওয়ার ৫ থেকে ১০ মিনিটের ভিতর লোন আসবে।</div>
+            </div>
+
+            <button class="w-full rounded-2xl pink-btn py-4 font-bold text-white">আবেদন জমা দিন</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-16 bg-slate-100">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="rounded-3xl bg-white p-6 card-shadow">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-2xl font-bold text-slate-900">সাম্প্রতিক লোন</h3>
+            <span class="text-sm text-slate-500">লাইভ আপডেট</span>
+          </div>
+          <div id="recentLoans" class="grid gap-3 md:grid-cols-2 xl:grid-cols-5"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    let loggedIn = false, balanceVisible = false, walletBalanceValue = 0, securityValue = 0, users = [];
+    const sampleNames = ['র***ান', 'স***ন', 'ম***ল', 'আ***ন', 'জ***ল', 'র***ী', 'ফ***া', 'ই***া'];
+    const sampleAmounts = [15000, 25000, 30000, 45000, 60000, 80000, 120000];
+    let recentLoanIndex = 0;
+    let recentLoanInterval;
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('loginTab').className = tab === 'login' ? 'w-1/2 rounded-2xl bg-white py-3 font-bold text-slate-900 shadow-sm' : 'w-1/2 rounded-2xl py-3 font-bold text-slate-500';
+      document.getElementById('registerTab').className = tab === 'register' ? 'w-1/2 rounded-2xl bg-white py-3 font-bold text-slate-900 shadow-sm' : 'w-1/2 rounded-2xl py-3 font-bold text-slate-500';
+    }
+
+    function register() {
+      const name = document.getElementById('regName').value.trim();
+      const phone = document.getElementById('regPhone').value.trim();
+      const pass = document.getElementById('regPassword').value.trim();
+      if (!name || !phone || !pass) return alert('সব তথ্য দিন');
+      users.push({ name, phone, pass });
+      alert('রেজিস্ট্রেশন সফল হয়েছে। এখন লগ ইন করুন।');
+      switchTab('login');
+      document.getElementById('loginPhone').value = phone;
+      document.getElementById('loginPassword').value = pass;
+    }
+
+    function login() {
+      const phone = document.getElementById('loginPhone').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const user = users.find(u => u.phone === phone && u.pass === pass) || (phone && pass ? { phone, pass } : null);
+      if (user) {
+        loggedIn = true;
+        document.getElementById('loginModal').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        startLiveRecentLoans();
+      } else alert('লগ ইন তথ্য সঠিক নয়');
+    }
+
+    function logout() {
+      loggedIn = false;
+      clearInterval(recentLoanInterval);
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('app').classList.add('hidden');
+    }
+
+    function animateValue(el, start, end, duration) {
+      const range = end - start, startTime = performance.now();
+      function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        el.textContent = '৳ ' + Math.round(start + range * progress).toLocaleString('bn-BD');
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function toggleBalance() {
+      if (!loggedIn) return;
+      balanceVisible = !balanceVisible;
+      const wallet = document.getElementById('walletBalance');
+      const security = document.getElementById('securityBalance');
+      document.getElementById('walletStatus').textContent = balanceVisible ? 'Visible' : 'Locked';
+      if (balanceVisible) {
+        wallet.classList.remove('balance-hidden');
+        security.classList.remove('balance-hidden');
+        animateValue(wallet, 0, walletBalanceValue, 700);
+        animateValue(security, 0, securityValue, 700);
+      } else {
+        wallet.classList.add('balance-hidden');
+        security.classList.add('balance-hidden');
+        wallet.textContent = '৳ ••••••';
+        security.textContent = '৳ ••••••';
+      }
+    }
+
+    function calculateEMI() {
+      const amount = parseFloat(document.getElementById('emiAmount').value);
+      const annualRate = parseFloat(document.getElementById('emiRate').value);
+      const months = parseFloat(document.getElementById('emiMonths').value);
+      if (isNaN(amount) || isNaN(annualRate) || isNaN(months) || months <= 0) return;
+      const rate = annualRate / 12 / 100;
+      const emi = rate === 0 ? amount / months : (amount * rate * Math.pow(1 + rate, months)) / (Math.pow(1 + rate, months) - 1);
+      document.getElementById('emiResult').textContent = '৳ ' + Math.round(emi).toLocaleString('bn-BD');
+      document.getElementById('emiTotal').textContent = '৳ ' + Math.round(emi * months).toLocaleString('bn-BD');
+    }
+
+    function updateSecurityPreview() {
+      const amount = parseFloat(document.getElementById('amount').value) || 0;
+      document.getElementById('securityPreview').textContent = '৳ ' + Math.round(amount * 0.05).toLocaleString('bn-BD');
+    }
+
+    function renderRecentLoans() {
+      const box = document.getElementById('recentLoans');
+      let items = '';
+      for (let i = 0; i < 5; i++) {
+        const name = sampleNames[(recentLoanIndex + i) % sampleNames.length];
+        const amount = sampleAmounts[Math.floor(Math.random() * sampleAmounts.length)];
+        const minsAgo = Math.floor(Math.random() * 25) + 1;
+        items += `
+          <div class="live-item rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="font-semibold text-slate-900">${name}</div>
+                <div class="text-xs text-slate-500">লোন পেয়েছে ${minsAgo} মিনিট আগে</div>
+              </div>
+              <div class="font-bold text-pink-600 whitespace-nowrap">৳ ${amount.toLocaleString('bn-BD')}</div>
+            </div>
+          </div>
+        `;
+      }
+      box.innerHTML = items;
+      recentLoanIndex += 5;
+    }
+
+    function startLiveRecentLoans() {
+      renderRecentLoans();
+      clearInterval(recentLoanInterval);
+      recentLoanInterval = setInterval(renderRecentLoans, 2200);
+    }
+
+    document.getElementById('loanForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('amount').value) || 0;
+      walletBalanceValue = amount;
+      securityValue = amount * 0.05;
+      updateSecurityPreview();
+      alert(`আপনার আবেদন জমা হয়েছে। সিকিউরিটি: ৳ ${Math.round(securityValue).toLocaleString('bn-BD')}`);
+      if (balanceVisible) toggleBalance();
+    });
+
+    window.onload = function() {
+      updateSecurityPreview();
+      document.getElementById('walletBalance').textContent = '৳ ••••••';
+      document.getElementById('securityBalance').textContent = '৳ ••••••';
+      document.getElementById('walletStatus').textContent = 'Locked';
+      startLiveRecentLoans();
+    };
+  </script>
+</body>
+</html>
